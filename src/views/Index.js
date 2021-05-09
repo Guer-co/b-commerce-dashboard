@@ -86,11 +86,8 @@ const web3Modal = new Web3Modal({
     if (window.ethereum) {
       window.ethereum.autoRefreshOnNetworkChange = false;
       try {
-          await web3Modal.connect();
-          //const provider = await web3Modal.connect();
-          //await window.ethereum.enable()
-          setWeb3test(1)
-            web3.eth.getAccounts((error, accounts) => {
+          web3Modal.connect();
+            await web3.eth.getAccounts((error, accounts) => {
               if (error) {
                 console.error(error);
               }
@@ -113,9 +110,13 @@ const web3Modal = new Web3Modal({
                 method: "wallet_addEthereumChain",
                 params: [switchToSKALE, accounts[0]]
               })
+              .then(() => {
+                setModal(!modal);
+              })
               .catch((error) => console.log(error.message));
-          });
-          setModal(!modal);      
+          })
+
+          ;
         } catch (error) {
           alert("You need to allow access to your metamask to use the app.");
       }
@@ -125,10 +126,10 @@ const web3Modal = new Web3Modal({
   useEffect(() => {
     const loadEthereumData = async () => {
         if (myaccount) {
-          console.log(myaccount);
             setLoading(true);
-            const network = await web3.eth.net.getNetworkType();
+            const network = await web3.eth.getChainId();
             setMynetwork(network);
+            if (network === 2481366625373186) {
             const guerABI = await new web3.eth.Contract(GUER_ABI, GUER_ADDRESS);
             setGuer(guerABI);
             const accountArray = await guerABI.methods.getUserNFTs().call({from:myaccount});
@@ -143,6 +144,7 @@ const web3Modal = new Web3Modal({
                     setLogo(web3.utils.toUtf8(accountinfoblock[4]))     
                     setLoading(false);
             }
+          }
         }
         }
     loadEthereumData();

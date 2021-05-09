@@ -191,9 +191,9 @@ const Sidebar = (props) => {
           {/* Navigation */}
           <Nav className="mb-md-3" navbar>
             <NavItem>
-              <NavLink href="https://future.guer.co#store" target="_blank">
+              <NavLink href="https://store.b-commerce.co" target="_blank">
                 <i className="ni ni-spaceship" />
-                View My Storefront
+                View Store Page
               </NavLink>
             </NavItem>
           </Nav>
