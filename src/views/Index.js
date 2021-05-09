@@ -86,7 +86,6 @@ const web3Modal = new Web3Modal({
       window.ethereum.autoRefreshOnNetworkChange = false;
       try {
           await window.ethereum.enable()
-          if (myaccount)
             await web3.eth.getAccounts((error, accounts) => {
               if (error) {
                 console.error(error);
