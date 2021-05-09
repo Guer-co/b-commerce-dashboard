@@ -1,22 +1,5 @@
-/*!
-
-=========================================================
-* Argon Dashboard React - v1.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2021 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import Web3 from 'web3';
 // reactstrap components
 import {
   Button,
@@ -33,13 +16,94 @@ import {
 } from "reactstrap";
 // core components
 import UserHeader from "components/Headers/UserHeader.js";
+import { GUER_ABI,GUER_ADDRESS } from '../config';
 
 
 
 const Profile = () => {
   const [logo, setLogo] = useState('');
-  const [loading, setLoading] = useState(false);
   const [photoloading, setPhotoloading] = useState(false);
+  const [web3, setWeb3] = useState('');
+  const [modal, setModal] = useState(false);
+  const [mynetwork, setMynetwork] = useState('');
+  const [myaccount, setMyaccount] = useState('');
+  const [guer, setGuer] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [accountinfo, setAccountinfo] = useState({});
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [product1image, setProduct1image] = useState('');
+  const [product1title, setProduct1title] = useState('');
+  const [product1description, setProduct1description] = useState('');
+  const [product1price, setProduct1price] = useState('');
+  const [product1sku, setProduct1sku] = useState('');
+
+  if (web3 === ''){
+    setWeb3(new Web3(Web3.givenProvider));
+}
+
+  useEffect(() => {
+    const loadEthereumData = async () => {
+      if (window.ethereum) {
+        window.ethereum.autoRefreshOnNetworkChange = false;
+        try {
+          await window.ethereum.enable()
+              await web3.eth.getAccounts((error, accounts) => {
+                if (error) {
+                  console.error(error);
+                }
+                setMyaccount(accounts[0]);
+                let switchToSKALE = {
+                  chainId: "0x8d0ca30434c02",
+                  chainName: "SKALE Network Testnet",
+                  rpcUrls: ["https://eth-global-12.skalenodes.com:10584"],
+                  nativeCurrency: {
+                    name: "SKALE ETH",
+                    symbol: "skETH",
+                    decimals: 18
+                  },
+                  blockExplorerUrls: [
+                    "https://expedition.dev/?rpcUrl=https://eth-global-12.skalenodes.com:10584"
+                  ]
+                };
+                window.ethereum
+                .request({
+                  method: "wallet_addEthereumChain",
+                  params: [switchToSKALE, accounts[0]]
+                })
+                .then(() => {
+                  setModal(!modal);
+                })
+                .catch((error) => console.log(error.message));
+            });
+          } catch (error) {
+            console.log(error);
+        }
+      }
+        if (myaccount) {
+            const network = await web3.eth.getChainId();
+            setMynetwork(network);
+            if (network === 2481366625373186) {
+            const guerABI = await new web3.eth.Contract(GUER_ABI, GUER_ADDRESS);
+            setGuer(guerABI);
+            const accountArray = await guerABI.methods.getUserNFTs().call({from:myaccount});
+            console.log(accountArray.length);
+            if (accountArray.length > 0 && Object.keys(accountinfo).length === 0) {
+                const accountinfoblock = await guerABI.methods.getaNFTInfo(accountArray[0]).call({from:myaccount});
+                console.log(accountinfoblock);
+                    setAccountinfo(accountinfoblock);
+                    setMyaccount(accountinfoblock[0]);
+                    setName(web3.utils.toUtf8(accountinfoblock[1]))
+                    setEmail(web3.utils.toUtf8(accountinfoblock[2]))
+                    setLogo(web3.utils.toUtf8(accountinfoblock[4]))     
+                    setLoading(false);
+            }
+          }
+        }
+        }
+    loadEthereumData();
+    setLoading(false);
+  },[myaccount,accountinfo]);
 
   const uploadFile = async (e) => {
     setPhotoloading(true);
@@ -95,6 +159,7 @@ const Profile = () => {
                             id="input-name"
                             placeholder="My Company"
                             type="text"
+                            defaultValue ={name}  
                           />
                           <br/>
                           <label
@@ -104,12 +169,12 @@ const Profile = () => {
                            Logo
                           </label>
                           <br/>
-                          <img alt="" style={{maxWidth:'60px'}} src={"https://gateway.ipfs.io/ipfs/QmZX5G8oFmDYayMdD92kkR4PhYJRkNX5hTKG8ZatAX685B"} />
-<br/>
+                          {logo ? 
+                            <img alt="" style={{maxWidth:'60px'}} src={logo ? "https://gateway.ipfs.io/ipfs/" + logo : ''}/>
+                          : ''}
+                  <br/>
                           <input id="user_profile_image" type="file" onChange={(e) => uploadFile(setLogo,e.target.id)}/>
-            {logo ? 
-                    <img alt="" style={{maxWidth:'60px'}} src={logo ? "https://gateway.ipfs.io/ipfs/" + logo : ''}/>
-                  : ''}
+
             <div id="status">{loading ? 'Uploading your file' : ''}</div>    
                         </FormGroup>
                       </Col>
@@ -126,6 +191,7 @@ const Profile = () => {
                             id="input-email"
                             placeholder="cryptostore@b-commerce.co"
                             type="email"
+                            defaultValue ={email} 
                           />
                         </FormGroup>
                         <FormGroup>

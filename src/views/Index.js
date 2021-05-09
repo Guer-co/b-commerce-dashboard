@@ -27,7 +27,6 @@ import {
   Input,
   FormText
 } from "reactstrap";
-import {chartOptions,parseOptions} from "variables/charts.js";
 import { GUER_ABI,GUER_ADDRESS } from '../config';
 
 import Header from "components/Headers/Header.js";
@@ -86,7 +85,7 @@ const web3Modal = new Web3Modal({
     if (window.ethereum) {
       window.ethereum.autoRefreshOnNetworkChange = false;
       try {
-          web3Modal.connect();
+          await window.ethereum.enable()
             await web3.eth.getAccounts((error, accounts) => {
               if (error) {
                 console.error(error);
@@ -131,13 +130,14 @@ const web3Modal = new Web3Modal({
             setMynetwork(network);
             if (network === 2481366625373186) {
             const guerABI = await new web3.eth.Contract(GUER_ABI, GUER_ADDRESS);
+            console.log(guerABI);
             setGuer(guerABI);
             const accountArray = await guerABI.methods.getUserNFTs().call({from:myaccount});
+            console.log(accountArray);
             if (accountArray.length > 0) {
-                const accountinfoblock = await guerABI.methods.getNFTInfo(accountArray[0]).call({from:myaccount});
-                //console.log(accountinfoblock);
+                const accountinfoblock = await guerABI.methods.getaNFTInfo(accountArray[0]).call({from:myaccount});
+                console.log(accountinfoblock);
                     setAccountinfo(accountinfoblock);
-                    setMynetwork(network);
                     setMyaccount(accountinfoblock[0]);
                     setName(web3.utils.toUtf8(accountinfoblock[1]))
                     setEmail(web3.utils.toUtf8(accountinfoblock[2]))
@@ -157,8 +157,11 @@ const web3Modal = new Web3Modal({
        let _name = web3.utils.fromAscii(name)
        let _email = web3.utils.fromAscii(email)
        let _logo = web3.utils.fromAscii(logo)
+       let _mobile = web3.utils.fromAscii(1)
+
        console.log(_name + " " + _email + " " +  _logo);
-       guer.methods.createNFT(_name, _email, '', _logo).send({
+       console.log(guer);
+       guer.methods.createNFT(_name, _email, _mobile, _logo).send({
            from: myaccount
        })
        .then(function(result){
@@ -174,7 +177,8 @@ const web3Modal = new Web3Modal({
         const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' })
         const file = document.getElementById("data_file").files[0];
         const upload = await ipfs.add(file);
-        console.log(upload);
+        console.log(upload.path);
+        setLogo(upload.path);
     }
 
     const uploadStoredata = async () => {
