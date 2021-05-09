@@ -129,10 +129,11 @@ const Sidebar = (props) => {
         {logo ? (
           <NavbarBrand className="pt-0" {...navbarBrandProps}>
             <img
-              alt={logo.imgAlt}
+              alt={"a"}
               className="navbar-brand-img"
-              src={logo.imgSrc}
+              src={"https://cloudflare-ipfs.com/ipfs/QmVjHASgA5M3oqnTCVUZFrtEESb1s5c48CEQ1CTfRDmVwy"}
             />
+            <div style={{color:'#11cbef',fontWeight:'bold'}}>B-Commerce</div>
           </NavbarBrand>
         ) : null}
         {/* Collapse */}
@@ -144,11 +145,11 @@ const Sidebar = (props) => {
                 <Col className="collapse-brand" xs="6">
                   {logo.innerLink ? (
                     <Link to={logo.innerLink}>
-                      <img alt={logo.imgAlt} src={logo.imgSrc} />
+                      <img alt={"a"} src={"https://cloudflare-ipfs.com/ipfs/QmVjHASgA5M3oqnTCVUZFrtEESb1s5c48CEQ1CTfRDmVwy"} />
                     </Link>
                   ) : (
                     <a href={logo.outterLink}>
-                      <img alt={logo.imgAlt} src={logo.imgSrc} />
+                      <img alt={"a"} src={"https://cloudflare-ipfs.com/ipfs/QmVjHASgA5M3oqnTCVUZFrtEESb1s5c48CEQ1CTfRDmVwy"} />
                     </a>
                   )}
                 </Col>
@@ -217,9 +218,9 @@ Sidebar.propTypes = {
     // it will be rendered as simple <a href="...">...</a> tag
     outterLink: PropTypes.string,
     // the image src of the logo
-    imgSrc: PropTypes.string.isRequired,
+    //imgSrc: PropTypes.string.isRequired,
     // the alt for the img
-    imgAlt: PropTypes.string.isRequired,
+    //imgAlt: PropTypes.string.isRequired,
   }),
 };
 

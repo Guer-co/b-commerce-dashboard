@@ -1,32 +1,11 @@
-/*!
-
-=========================================================
-* Argon Dashboard React - v1.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2021 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
 import React, { useState, useEffect } from 'react';
 import Web3 from 'web3';
 import Web3Modal from "web3modal";
 import Torus from "@toruslabs/torus-embed";
-
-// node.js library that concatenates classes (strings)
 import classnames from "classnames";
-// javascipt plugin for creating charts
 import Chart from "chart.js";
-// react plugin used to create charts
-import { Line, Bar } from "react-chartjs-2";
-// reactstrap components
+import { NavLink as NavLinkRRD, Link } from "react-router-dom";
+
 import {
   Button,
   Card,
@@ -40,17 +19,18 @@ import {
   Container,
   Row,
   Col,
+  Modal,
+  ModalHeader, 
+  ModalBody, 
+  ModalFooter,
+  Input,
+  FormText
 } from "reactstrap";
-
-// core components
-import {
-  chartOptions,
-  parseOptions,
-  chartExample1,
-  chartExample2,
-} from "variables/charts.js";
+import {chartOptions,parseOptions} from "variables/charts.js";
+import { GUER_ABI,GUER_ADDRESS } from '../config';
 
 import Header from "components/Headers/Header.js";
+import "../styles.css"
 
 const providerOptions = {
   torus: {
@@ -69,45 +49,154 @@ const providerOptions = {
 };
 
 const web3Modal = new Web3Modal({
-  network: "mainnet", // optional
   cacheProvider: true, // optional
   providerOptions // required
 });
 
+const IPFS = require('ipfs-http-client');
+
 const Index = (props) => {
   const [web3, setWeb3] = useState('');
   const [web3test, setWeb3test] = useState(0);
+  const [modal, setModal] = useState(false);
+  const [importmodal, setImportmodal] = useState(false);
+  const [choicemodal, setChoicemodal] = useState(false);
+  const [createmodal, setCreatemodal] = useState(false);
 
   const [activeNav, setActiveNav] = useState(1);
-  const [chartExample1Data, setChartExample1Data] = useState("data1");
+  const [photoloading, setPhotoloading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [mynetwork, setMynetwork] = useState('');
+  const [myaccount, setMyaccount] = useState('');
+  const [guer, setGuer] = useState('');
+  const [loading, setLoading] = useState(false);
+  //const [myprofile, setMyprofile] = useState('');
+  const [accountinfo, setAccountinfo] = useState({});
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [logo, setLogo] = useState('');
+  const [product1image, setProduct1image] = useState('');
+  const [product1title, setProduct1title] = useState('');
+  const [product1description, setProduct1description] = useState('');
+  const [product1price, setProduct1price] = useState('');
+  const [product1item, setProduct1item] = useState('');
 
+  const toggle = () => setModal(!modal);
+  const toggleimport = () => setImportmodal(!importmodal);
+  const togglechoice = () => setChoicemodal(!choicemodal);
+  const togglecreate = () => setCreatemodal(!createmodal);
+
+
+  if (web3 === ''){
+    setWeb3(new Web3(Web3.givenProvider));
+}
 
   const web3Check = async () => {
+    let switchToSKALE = {
+      chainId: "0x8d0ca30434c02",
+      chainName: "SKALE Network Testnet",
+      rpcUrls: ["https://eth-global-12.skalenodes.com:10584"],
+      nativeCurrency: {
+        name: "SKALE ETH",
+        symbol: "skETH",
+        decimals: 18
+      },
+      blockExplorerUrls: [
+        "https://expedition.dev/?rpcUrl=https://eth-global-12.skalenodes.com:10584"
+      ]
+    };
     if (window.ethereum) {
+      console.log('a');
         window.ethereum.autoRefreshOnNetworkChange = false;
         try {
             await web3Modal.connect();
-            //const provider = await web3Modal.connect();
-            //await window.ethereum.enable()
-            setWeb3test(1)
+            await window.ethereum.enable()
+            console.log(web3);
+            web3.eth.getAccounts((error, accounts) => {
+              if (error) {
+                console.error(error);
+              }
+              console.log(accounts[0]);
+              setMyaccount(accounts[0]);
+
+              window.ethereum
+              .request({
+                method: "wallet_addEthereumChain",
+                params: [switchToSKALE, accounts[0]]
+              })
+              .catch((error) => console.log(error.message));
+          });            
         } catch (error) {
             alert("You need to allow access to your metamask to use the app.");
         }
     }
 }
 
-  if (window.Chart) {
-    parseOptions(Chart, chartOptions());
-  }
+  useEffect(() => {
+    const loadEthereumData = async () => {
+        //if (window.ethereum) {
+        //    window.ethereum.autoRefreshOnNetworkChange = false;
+        //    try {
+        //        await window.ethereum.enable()
+        //    } catch (error) {
+        //        alert("You need to allow Guer access to your metamask to use the app.");
+        //    }
+        //}
+        if (myaccount) {
+            setLoading(true);
+            const network = await web3.eth.net.getNetworkType();
+            setMynetwork(network);
+            const guerABI = await new web3.eth.Contract(GUER_ABI, GUER_ADDRESS);
+            setGuer(guerABI);
+            const accountArray = await guerABI.methods.getUserNFTs().call({from:myaccount});
+            if (accountArray.length > 0) {
+                const accountinfoblock = await guerABI.methods.getNFTInfo(accountArray[0]).call({from:myaccount});
+                //console.log(accountinfoblock);
+                    setAccountinfo(accountinfoblock);
+                    setMynetwork(network);
+                    setMyaccount(accountinfoblock[0]);
+                    setName(web3.utils.toUtf8(accountinfoblock[1]))
+                    setEmail(web3.utils.toUtf8(accountinfoblock[2]))
+                    setLogo(web3.utils.toUtf8(accountinfoblock[4]))     
+                    setLoading(false);
+            }
+        }
+        }
+    loadEthereumData();
+    setLoading(false);
+},[web3,myaccount, accountinfo]);
 
-  const toggleNavs = (e, index) => {
-    e.preventDefault();
-    setActiveNav(index);
-    setChartExample1Data("data" + index);
+
+  const registerAccount = async () =>{   
+       setPhotoloading(true);
+       let _name = web3.utils.fromAscii(name)
+       let _email = web3.utils.fromAscii(email)
+       let _logo = web3.utils.fromAscii(logo)
+       console.log(_name + " " + _email + " " +  _logo);
+       guer.methods.createNFT(_name, _email, '', _logo).send({
+           from: myaccount
+       })
+       .then(function(result){
+           console.log(result);
+           window.location.reload(false);
+       }).catch(function(error){
+           console.log(error);
+   });
+   setLoading(false);
   };
 
-  const connect = () => {
-    console.log('a');
+  const uploadFile = async () => {
+        const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' })
+        const file = document.getElementById("data_file").files[0];
+        const upload = await ipfs.add(file);
+        console.log(upload);
+    }
+
+    const uploadStoredata = async () => {
+      const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' })
+      const file = document.getElementById("storedata").files[0];
+      const upload = await ipfs.add(file);
+      console.log(upload);
   }
 
   return (
@@ -119,17 +208,195 @@ const Index = (props) => {
         <Col className="mb-12 mb-xl-0" xl="12" style={{textAlign:'center',backgroundColor:'white',border:'0px'}}>
             <Card className="bg-gradient-default shadow" style={{backgroundColor:'white',height:'90%',border:'0px'}}>
               <CardBody style={{backgroundColor:'white'}}>
-                <div style={{fontSize:'50px',color:'limegreen'}}>NOT THE CLOUD, BETTER</div>
-                <div style={{fontSize:'20px',color:'pink'}}>WELCOME TO THE FUTURE OF SELLING ONLINE, WITHOUT THE FLUFF OR MIDDLEMEN</div>
-                <div style={{fontSize:'80px',color:'lightblue'}}>B-COMMERCE</div>
+                <div style={{fontSize:'80px',color:'lightblue'}}>WELCOME</div>
+                <div style={{fontSize:'20px',color:'#FAAFA5', fontWeight:'bold'}}>WE'LL HAVE YOU UP AND RUNNING IN NO TIME<br/>BETTER AND MORE BLOCKCHAIN-Y THAN EVERY BEFORE. READY?</div>
                 <br/><br/><br/>
-                <Button
-                color="info"
-                href="#pablo"
-                onClick={()=>{connect()}}
-              >
-                Connect
-              </Button>
+                <div>
+                  <div style={{border:' 5px solid lightblue',borderRadius:'25px',maxWidth:'60%',display:'table',width:'60%',margin:'0 auto',padding:'10px 20px'}}>
+                    <div style={{display: 'table-row'}}>
+                    <div onClick={() => {web3Check(); setModal(!modal);}} style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#67D0DD',fontSize:'70px', fontWeight:'bold',verticalAlign: 'middle'}}>1.</div>
+                    <div onClick={() => {web3Check(); setModal(!modal);}} style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#FAAFA5',fontSize:'50px', fontWeight:'bold',verticalAlign: 'middle'}}>Register</div>
+                    <div style={{display: 'table-cell', padding:'5px',fontSize:'16px',verticalAlign: 'middle',textAlign:'left'}}>LET THE WORLD KNOW WHO YOU ARE, WITHOUT GIVING UP CONTROL OF WHO YOU ARE</div>
+                    </div>
+                  </div>
+                </div>
+                <br/><br/><br/>
+                <div>
+                  <div style={{border:' 5px solid lightblue',borderRadius:'25px',maxWidth:'60%',display:'table',width:'60%',margin:'0 auto',padding:'10px 20px'}}>
+                    <div style={{display: 'table-row'}}>
+                    <div onClick={() => {setChoicemodal(!choicemodal);}}style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#67D0DD',fontSize:'70px', fontWeight:'bold',verticalAlign: 'middle'}}>2.</div>
+                    <div onClick={() => {setChoicemodal(!choicemodal);}}style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#FAAFA5',fontSize:'50px', fontWeight:'bold',verticalAlign: 'middle'}}>Create</div>
+                    <div style={{display: 'table-cell', padding:'5px',fontSize:'16px',verticalAlign: 'middle',textAlign:'left'}}>IMPORT AN EXISTING INVENTORY FROM SHOPIFY, OR START ADDING YOUR OWN PRODUCTS FROM SCRATCH</div>
+                    </div>
+                  </div>
+                </div>
+                <br/><br/><br/>
+                <div>
+                  <div style={{border:' 5px solid lightblue',borderRadius:'25px',maxWidth:'60%',display:'table',width:'60%',margin:'0 auto',padding:'10px 20px'}}>
+                    <div style={{display: 'table-row'}}>
+                    <div style={{display: 'table-cell', padding:'5px',color:'#67D0DD',fontSize:'70px', fontWeight:'bold',verticalAlign: 'middle'}}><Link to={'user-profile'} style={{color:'#67D0DD'}}>3.</Link></div>
+
+                    <div style={{display: 'table-cell', padding:'5px',color:'#FAAFA5',fontSize:'50px', fontWeight:'bold',verticalAlign: 'middle'}}><Link to={'user-profile'} style={{color:'#FAAFA5'}}>Customize</Link></div>
+                    <div style={{display: 'table-cell', padding:'5px',fontSize:'16px',verticalAlign: 'middle',textAlign:'left'}}>MAKE YOUR SHOP YOUR OWN BY SELECTING COLORS, LOGOS, SHOP INFORMATION, AND MORE!</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+      <Modal isOpen={modal} toggle={toggle} className="purplemodal" cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px','background-color':'purple','color':'white'}}>
+        <ModalHeader toggle={toggle} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>REGISTER</ModalHeader>
+        <ModalBody>
+        <div style={{paddingBottom:'10px'}}>Your Ethereum Address:<br/>{myaccount}</div><br/>
+        <label
+                            className="form-control-label"
+                            htmlFor="input-name"
+                          >
+                            Store Name
+                          </label>
+            <Input style={{paddingBottom:'10px'}} id="outlined-basic" label="Name" variant="outlined" value={name} onChange={(e) => setName(e.target.value)} placeholder="Store Name" />
+            <br/>
+            <label
+                            className="form-control-label"
+                            htmlFor="input-name"
+                          >
+                            Store Email
+                          </label>
+            <Input style={{paddingBottom:'10px'}} id="outlined-basic" label="Email" variant="outlined" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Store Email" />
+            <br/><br/>
+            
+            <input id="data_file" type="file" onChange={(e) => uploadFile(setLogo,e.target.id)}/>
+            <FormText color="muted">
+              Upload your company logo
+            </FormText>
+            {logo ? 
+                    <img alt="" style={{maxWidth:'60px'}} src={logo ? "https://gateway.ipfs.io/ipfs/" + logo : ''}/>
+                  : ''}
+            <div id="status">{loading ? 'Uploading your file' : ''}</div>        
+        </ModalBody>
+        <ModalFooter>
+        <Button onClick={toggle} color="white">
+            Cancel
+        </Button>
+        <Button id="submit" onClick={() => registerAccount()} color="white" disabled={photoloading}>
+            {photoloading ? "Uploading..." : "Create!"}
+        </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={choicemodal} toggle={togglechoice} className="custom_modal">
+        <ModalHeader toggle={togglechoice} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>CREATE</ModalHeader>
+        <ModalBody>
+
+        <div style={{display: 'table-row'}}>
+                    <div style={{display: 'table-cell', padding:'5px',fontSize:'14px', fontWeight:'bold',verticalAlign: 'middle'}}>
+                    Already have a shopify store? Take back control and reduce fees in just a few clicks. Get started!
+                    <Button onClick={() => {togglechoice();toggleimport()}} color="white">
+                        IMPORT
+                    </Button>
+                    </div>
+
+                    <div style={{display: 'table-cell', padding:'5px',fontSize:'14px', fontWeight:'bold',verticalAlign: 'middle'}}>***</div>
+                    <div style={{display: 'table-cell', padding:'5px',fontSize:'14px',verticalAlign: 'middle',textAlign:'left'}}>All the opportunities await you! Take a quick second to create your first product for your blockchain commerce store!
+                    <Button onClick={() => {togglecreate();togglecreate()}} color="white">
+                        START FROM SCRATCH
+                    </Button>
+                    </div>
+                    </div>     
+        </ModalBody>
+        <ModalFooter>
+        <Button onClick={togglechoice} color="white">
+            Cancel
+        </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={createmodal} toggle={togglecreate} className="custom_modal">
+        <ModalHeader toggle={togglecreate} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>CREATE</ModalHeader>
+        <ModalBody>
+        <div style={{paddingBottom:'10px'}}>Let's take a quick moment to walk you through creating a new product for your inventory. You can always update this later if needed!</div>
+            <br/><br/>
+                <hr/>
+                <label
+                            className="form-control-label"
+                            htmlFor="input-name"
+                          >
+                            Product Name
+                          </label>
+                <Input  value={product1title} onChange={(e) => setProduct1title(e.target.value)}/>
+                <br/>
+                <label
+                            className="form-control-label"
+                            htmlFor="input-name"
+                          >
+                            Product Description
+                          </label>
+                <Input value={product1description} onChange={(e) => setProduct1description(e.target.value)}/>
+                <br/>
+                <label
+                            className="form-control-label"
+                            htmlFor="input-name"
+                          >
+                            Product Price
+                          </label>
+                <Input value={product1price} onChange={(e) => setProduct1price(e.target.value)}/>
+                <br/>
+                <div className="file-field input-field">
+                    <input
+                        accept="image/*"
+                        id="product1image"
+                        type="file"
+                        style={{display:'none'}}
+                    onChange={(e) => {uploadFile(setProduct1image,e.target.id)}}
+                    />
+                    <label htmlFor="product1image">
+                    <Button className="small-main-buttons" component="span">
+                        <div>
+                        /\
+                        </div>
+                        <div>{product1image ? "Swap?" : "Product Image"}</div>
+                    </Button>
+                    </label>
+                    <img alt="" style={{maxWidth:'60px'}} src={product1image ? "https://gateway.ipfs.io/ipfs/" + product1image : ''}/>
+                </div>
+           <input id="storedata" type="file" onChange={(e) => uploadStoredata(setLogo,e.target.id)}/>     
+        </ModalBody>
+        <ModalFooter>
+        <Button onClick={togglecreate} color="white">
+            Cancel
+        </Button>
+        <Button id="submit" onClick={() => registerAccount()} color="white" disabled={photoloading}>
+            {photoloading ? "Uploading..." : "Create product!"}
+        </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={importmodal} toggle={toggleimport} className="custom_modal">
+        <ModalHeader toggle={toggleimport} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>IMPORT</ModalHeader>
+        <ModalBody>
+        <div style={{paddingBottom:'10px'}}>It's easy to import your existing Shopify inventory to your own B-commerce Shop! Ditch the fees and embrace the blockchain in a few clicks! 
+        <br/><br/>1. Log-in to your Shopify Dashboard, and select "Products"
+        <br/><br/>2. At the top right, click "Export", Select "All Products" and "Plain CSV file", and click "Export Products"
+        <br/><br/>3. When you receive the file in you e-mail, upload it here!
+            
+            <input id="storedata" type="file" onChange={(e) => uploadStoredata(setLogo,e.target.id)}/>
+            <FormText color="muted">
+              Upload your company logo
+            </FormText>
+            {logo ? 
+                    <img alt="" style={{maxWidth:'60px'}} src={logo ? "https://gateway.ipfs.io/ipfs/" + logo : ''}/>
+                  : ''}
+            <div id="status">{loading ? 'Uploading your file' : ''}</div>        
+        </div>
+        </ModalBody>
+        <ModalFooter>
+        <Button onClick={toggleimport} color="white">
+            Cancel
+        </Button>
+        <Button id="submit" onClick={() => console.log('a')} color="white" disabled={photoloading}>
+            {photoloading ? "Uploading..." : "Upload list!"}
+        </Button>
+        </ModalFooter>
+      </Modal>
+    </div>
               </CardBody>
             </Card>
           </Col>

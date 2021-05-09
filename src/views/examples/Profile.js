@@ -15,7 +15,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
+import React, { useState } from 'react';
 
 // reactstrap components
 import {
@@ -29,11 +29,34 @@ import {
   Container,
   Row,
   Col,
+  FormText
 } from "reactstrap";
 // core components
 import UserHeader from "components/Headers/UserHeader.js";
 
+
+
 const Profile = () => {
+  const [logo, setLogo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [photoloading, setPhotoloading] = useState(false);
+
+  const uploadFile = async (e) => {
+    setPhotoloading(true);
+    console.log(photoloading);
+    document.getElementById("submit").disabled = true;
+    const data = new FormData();
+    const file = document.getElementById("user_profile_image").files[0];
+    data.append("file", file);
+    fetch('/api/archon', {
+        body: data,
+        method: 'POST'
+    })
+        //.then(res => res.json())
+        .then(res => {console.log(res);setLogo(file.name); setPhotoloading(false)})
+        .catch(error => error.message)
+}
+
   return (
     <>
       <UserHeader />
@@ -48,14 +71,7 @@ const Profile = () => {
                     <h3 className="mb-0">My Store</h3>
                   </Col>
                   <Col className="text-right" xs="4">
-                    <Button
-                      color="primary"
-                      href="#pablo"
-                      onClick={(e) => e.preventDefault()}
-                      size="sm"
-                    >
-                      Settings
-                    </Button>
+
                   </Col>
                 </Row>
               </CardHeader>
@@ -70,32 +86,60 @@ const Profile = () => {
                         <FormGroup>
                           <label
                             className="form-control-label"
-                            htmlFor="input-username"
+                            htmlFor="input-name"
                           >
                             Company Name
                           </label>
                           <Input
                             className="form-control-alternative"
-                            defaultValue="lucky.jesse"
-                            id="input-username"
-                            placeholder="Username"
+                            id="input-name"
+                            placeholder="My Company"
                             type="text"
                           />
+                          <br/>
+                          <label
+                            className="form-control-label"
+                            htmlFor="user_profile_image"
+                          >
+                           Logo
+                          </label>
+                          <br/>
+                          <img alt="" style={{maxWidth:'60px'}} src={"https://gateway.ipfs.io/ipfs/QmZX5G8oFmDYayMdD92kkR4PhYJRkNX5hTKG8ZatAX685B"} />
+<br/>
+                          <input id="user_profile_image" type="file" onChange={(e) => uploadFile(setLogo,e.target.id)}/>
+            {logo ? 
+                    <img alt="" style={{maxWidth:'60px'}} src={logo ? "https://gateway.ipfs.io/ipfs/" + logo : ''}/>
+                  : ''}
+            <div id="status">{loading ? 'Uploading your file' : ''}</div>    
                         </FormGroup>
                       </Col>
                       <Col lg="6">
                         <FormGroup>
-                          <label
+                        <label
                             className="form-control-label"
                             htmlFor="input-email"
                           >
-                           Logo
+                           Email
                           </label>
                           <Input
                             className="form-control-alternative"
                             id="input-email"
-                            placeholder="jesse@example.com"
+                            placeholder="cryptostore@b-commerce.co"
                             type="email"
+                          />
+                        </FormGroup>
+                        <FormGroup>
+                        <label
+                            className="form-control-label"
+                            htmlFor="input-ens"
+                          >
+                           ENS Domain
+                          </label>
+                          <Input
+                            className="form-control-alternative"
+                            id="input-ens"
+                            placeholder="mycryptostore.eth"
+                            type="text"
                           />
                         </FormGroup>
                       </Col>
@@ -103,7 +147,7 @@ const Profile = () => {
                   </div>
                   <hr className="my-4" />
                   {/* Description */}
-                  <h6 className="heading-small text-muted mb-4">Quick Description</h6>
+                  <h6 className="heading-small text-muted mb-4">Company Description</h6>
                   <div className="pl-lg-4">
                     <FormGroup>
                       <label>About</label>

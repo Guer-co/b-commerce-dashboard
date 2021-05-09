@@ -44,7 +44,7 @@ const AdminNavbar = (props) => {
             className="h4 mb-0 text-white text-uppercase d-none d-lg-inline-block"
             to="/"
           >
-            {props.brandText}
+            <div style={{fontSize:"40px"}}>{props.brandText}</div>
           </Link>
 
           <Nav className="align-items-center d-none d-md-flex" navbar>
@@ -55,14 +55,13 @@ const AdminNavbar = (props) => {
                     <img
                       alt="..."
                       src={
-                        require("../../assets/img/theme/team-4-800x800.jpg")
-                          .default
+                        "https://cloudflare-ipfs.com/ipfs/QmWC2KPLew1U8M7VDe6gW3YG9LZgX4gAsboRD18xHo9WCw"
                       }
                     />
                   </span>
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
-                      Jessica Jones
+                      {/*props.account ? props.account : '0x000000000000'*/}
                     </span>
                   </Media>
                 </Media>
