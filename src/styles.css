@@ -1,3 +1,7 @@
+body {
+    font-family: "Questrial";
+}
+
 .purplemodal .modal-content .w-100 {
     color:white;
 }
@@ -15,3 +19,23 @@
 background: linear-gradient(87deg, #5e72e4 0, #825ee4 100%) !important;
 }
 
+.pinkmodal .modal-content .w-100 {
+    color:white;
+}
+
+.pinkmodal .modal-content .div {
+    color:white;    
+}
+
+    .pinkmodal .modal-content .form-control-label {
+        color:white;        
+    }
+
+
+.pinkmodal .modal-content {
+background: linear-gradient(87deg, #DC95DD 0, #DC95DD 100%) !important;
+}
+
+h5 {
+    font-size:24px;
+}

@@ -5,6 +5,7 @@ import Torus from "@toruslabs/torus-embed";
 import classnames from "classnames";
 import Chart from "chart.js";
 import { NavLink as NavLinkRRD, Link } from "react-router-dom";
+import "@fontsource/questrial"
 
 import {
   Button,
@@ -32,27 +33,6 @@ import { GUER_ABI,GUER_ADDRESS } from '../config';
 import Header from "components/Headers/Header.js";
 import "../styles.css"
 
-const providerOptions = {
-  torus: {
-    package: Torus, 
-    options: {
-      networkParams: {
-        host: "https://localhost:8545", 
-        chainId: 1337, 
-        networkId: 1337
-      },
-      config: {
-        buildEnv: "development" 
-      }
-    }
-  }
-};
-
-const web3Modal = new Web3Modal({
-  cacheProvider: true, // optional
-  providerOptions // required
-});
-
 const IPFS = require('ipfs-http-client');
 
 const Index = (props) => {
@@ -63,7 +43,6 @@ const Index = (props) => {
   const [choicemodal, setChoicemodal] = useState(false);
   const [createmodal, setCreatemodal] = useState(false);
 
-  const [activeNav, setActiveNav] = useState(1);
   const [photoloading, setPhotoloading] = useState(false);
   const [open, setOpen] = useState(false);
   const [mynetwork, setMynetwork] = useState('');
@@ -79,7 +58,7 @@ const Index = (props) => {
   const [product1title, setProduct1title] = useState('');
   const [product1description, setProduct1description] = useState('');
   const [product1price, setProduct1price] = useState('');
-  const [product1item, setProduct1item] = useState('');
+  const [product1sku, setProduct1sku] = useState('');
 
   const toggle = () => setModal(!modal);
   const toggleimport = () => setImportmodal(!importmodal);
@@ -91,58 +70,62 @@ const Index = (props) => {
     setWeb3(new Web3(Web3.givenProvider));
 }
 
+const providerOptions = {
+  torus: {
+    package: Torus, 
+  }
+};
+
+const web3Modal = new Web3Modal({
+  network: "mainnet", // optional
+  cacheProvider: true, // optional
+  providerOptions // required
+});
+
   const web3Check = async () => {
-    let switchToSKALE = {
-      chainId: "0x8d0ca30434c02",
-      chainName: "SKALE Network Testnet",
-      rpcUrls: ["https://eth-global-12.skalenodes.com:10584"],
-      nativeCurrency: {
-        name: "SKALE ETH",
-        symbol: "skETH",
-        decimals: 18
-      },
-      blockExplorerUrls: [
-        "https://expedition.dev/?rpcUrl=https://eth-global-12.skalenodes.com:10584"
-      ]
-    };
     if (window.ethereum) {
-      console.log('a');
-        window.ethereum.autoRefreshOnNetworkChange = false;
-        try {
-            await web3Modal.connect();
-            await window.ethereum.enable()
-            console.log(web3);
+      window.ethereum.autoRefreshOnNetworkChange = false;
+      try {
+          await web3Modal.connect();
+          //const provider = await web3Modal.connect();
+          //await window.ethereum.enable()
+          setWeb3test(1)
             web3.eth.getAccounts((error, accounts) => {
               if (error) {
                 console.error(error);
               }
-              console.log(accounts[0]);
               setMyaccount(accounts[0]);
-
+              let switchToSKALE = {
+                chainId: "0x8d0ca30434c02",
+                chainName: "SKALE Network Testnet",
+                rpcUrls: ["https://eth-global-12.skalenodes.com:10584"],
+                nativeCurrency: {
+                  name: "SKALE ETH",
+                  symbol: "skETH",
+                  decimals: 18
+                },
+                blockExplorerUrls: [
+                  "https://expedition.dev/?rpcUrl=https://eth-global-12.skalenodes.com:10584"
+                ]
+              };
               window.ethereum
               .request({
                 method: "wallet_addEthereumChain",
                 params: [switchToSKALE, accounts[0]]
               })
               .catch((error) => console.log(error.message));
-          });            
+          });
+          setModal(!modal);      
         } catch (error) {
-            alert("You need to allow access to your metamask to use the app.");
-        }
+          alert("You need to allow access to your metamask to use the app.");
+      }
     }
 }
 
   useEffect(() => {
     const loadEthereumData = async () => {
-        //if (window.ethereum) {
-        //    window.ethereum.autoRefreshOnNetworkChange = false;
-        //    try {
-        //        await window.ethereum.enable()
-        //    } catch (error) {
-        //        alert("You need to allow Guer access to your metamask to use the app.");
-        //    }
-        //}
         if (myaccount) {
+          console.log(myaccount);
             setLoading(true);
             const network = await web3.eth.net.getNetworkType();
             setMynetwork(network);
@@ -214,8 +197,8 @@ const Index = (props) => {
                 <div>
                   <div style={{border:' 5px solid lightblue',borderRadius:'25px',maxWidth:'60%',display:'table',width:'60%',margin:'0 auto',padding:'10px 20px'}}>
                     <div style={{display: 'table-row'}}>
-                    <div onClick={() => {web3Check(); setModal(!modal);}} style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#67D0DD',fontSize:'70px', fontWeight:'bold',verticalAlign: 'middle'}}>1.</div>
-                    <div onClick={() => {web3Check(); setModal(!modal);}} style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#FAAFA5',fontSize:'50px', fontWeight:'bold',verticalAlign: 'middle'}}>Register</div>
+                    <div onClick={() => {web3Check(); }} style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#67D0DD',fontSize:'70px', fontWeight:'bold',verticalAlign: 'middle'}}>1.</div>
+                    <div onClick={() => {web3Check(); }}  style={{cursor: 'pointer',display: 'table-cell', padding:'5px',color:'#FAAFA5',fontSize:'50px', fontWeight:'bold',verticalAlign: 'middle'}}>Register</div>
                     <div style={{display: 'table-cell', padding:'5px',fontSize:'16px',verticalAlign: 'middle',textAlign:'left'}}>LET THE WORLD KNOW WHO YOU ARE, WITHOUT GIVING UP CONTROL OF WHO YOU ARE</div>
                     </div>
                   </div>
@@ -245,7 +228,7 @@ const Index = (props) => {
       <Modal isOpen={modal} toggle={toggle} className="purplemodal" cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px','background-color':'purple','color':'white'}}>
         <ModalHeader toggle={toggle} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>REGISTER</ModalHeader>
         <ModalBody>
-        <div style={{paddingBottom:'10px'}}>Your Ethereum Address:<br/>{myaccount}</div><br/>
+        <div style={{paddingBottom:'10px',color:"white"}}>Your Ethereum Address:<br/>{myaccount}</div><br/>
         <label
                             className="form-control-label"
                             htmlFor="input-name"
@@ -264,7 +247,7 @@ const Index = (props) => {
             <br/><br/>
             
             <input id="data_file" type="file" onChange={(e) => uploadFile(setLogo,e.target.id)}/>
-            <FormText color="muted">
+            <FormText color="white">
               Upload your company logo
             </FormText>
             {logo ? 
@@ -282,20 +265,21 @@ const Index = (props) => {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={choicemodal} toggle={togglechoice} className="custom_modal">
-        <ModalHeader toggle={togglechoice} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>CREATE</ModalHeader>
+      <Modal isOpen={choicemodal} toggle={togglechoice} className="pinkmodal">
+        <ModalHeader toggle={togglechoice} cssModule={{'modal-title': 'w-100 text-center'}}>CREATE</ModalHeader>
         <ModalBody>
 
         <div style={{display: 'table-row'}}>
-                    <div style={{display: 'table-cell', padding:'5px',fontSize:'14px', fontWeight:'bold',verticalAlign: 'middle'}}>
+                    <div style={{display: 'table-cell', padding:'10px',fontSize:'18px', verticalAlign: 'middle',lineHeight:'2',color:'white'}}>
                     Already have a shopify store? Take back control and reduce fees in just a few clicks. Get started!
+                    <br/>
                     <Button onClick={() => {togglechoice();toggleimport()}} color="white">
                         IMPORT
                     </Button>
                     </div>
 
-                    <div style={{display: 'table-cell', padding:'5px',fontSize:'14px', fontWeight:'bold',verticalAlign: 'middle'}}>***</div>
-                    <div style={{display: 'table-cell', padding:'5px',fontSize:'14px',verticalAlign: 'middle',textAlign:'left'}}>All the opportunities await you! Take a quick second to create your first product for your blockchain commerce store!
+                    <div style={{display: 'table-cell', padding:'10px',fontSize:'18px',verticalAlign: 'middle', textAlign:'left',lineHeight:'2',color:'white'}}>All the opportunities await you! Take a quick second to create your first product for your blockchain commerce store!
+                    <br/>
                     <Button onClick={() => {togglecreate();togglecreate()}} color="white">
                         START FROM SCRATCH
                     </Button>
@@ -309,11 +293,10 @@ const Index = (props) => {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={createmodal} toggle={togglecreate} className="custom_modal">
+      <Modal isOpen={createmodal} toggle={togglecreate} className="pinkmodal" >
         <ModalHeader toggle={togglecreate} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>CREATE</ModalHeader>
         <ModalBody>
-        <div style={{paddingBottom:'10px'}}>Let's take a quick moment to walk you through creating a new product for your inventory. You can always update this later if needed!</div>
-            <br/><br/>
+        <div style={{paddingBottom:'10px',color:'white'}}>Let's take a quick moment to walk you through creating a new product for your inventory. You can always update this later if needed!</div>
                 <hr/>
                 <label
                             className="form-control-label"
@@ -339,6 +322,14 @@ const Index = (props) => {
                           </label>
                 <Input value={product1price} onChange={(e) => setProduct1price(e.target.value)}/>
                 <br/>
+                <label
+                            className="form-control-label"
+                            htmlFor="input-name"
+                          >
+                            Product SKU
+                          </label>
+                <Input value={product1sku} onChange={(e) => setProduct1sku(e.target.value)}/>
+                <br/>
                 <div className="file-field input-field">
                     <input
                         accept="image/*"
@@ -349,9 +340,6 @@ const Index = (props) => {
                     />
                     <label htmlFor="product1image">
                     <Button className="small-main-buttons" component="span">
-                        <div>
-                        /\
-                        </div>
                         <div>{product1image ? "Swap?" : "Product Image"}</div>
                     </Button>
                     </label>
@@ -369,14 +357,14 @@ const Index = (props) => {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={importmodal} toggle={toggleimport} className="custom_modal">
+      <Modal isOpen={importmodal} toggle={toggleimport} className="pinkmodal">
         <ModalHeader toggle={toggleimport} cssModule={{'modal-title': 'w-100 text-center', 'font-size':'20px'}}>IMPORT</ModalHeader>
         <ModalBody>
-        <div style={{paddingBottom:'10px'}}>It's easy to import your existing Shopify inventory to your own B-commerce Shop! Ditch the fees and embrace the blockchain in a few clicks! 
+        <div style={{paddingBottom:'10px',color:'white'}}>It's easy to import your existing Shopify inventory to your own B-commerce Shop! Ditch the fees and embrace the blockchain in a few clicks! 
         <br/><br/>1. Log-in to your Shopify Dashboard, and select "Products"
         <br/><br/>2. At the top right, click "Export", Select "All Products" and "Plain CSV file", and click "Export Products"
-        <br/><br/>3. When you receive the file in you e-mail, upload it here!
-            
+        <br/><br/>3. When you receive the file in your e-mail, upload it here!
+        <br/><br/>
             <input id="storedata" type="file" onChange={(e) => uploadStoredata(setLogo,e.target.id)}/>
             <FormText color="muted">
               Upload your company logo
