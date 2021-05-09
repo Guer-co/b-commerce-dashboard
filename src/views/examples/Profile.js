@@ -208,6 +208,9 @@ const Profile = () => {
                             type="text"
                           />
                         </FormGroup>
+                        <FormGroup>
+                        <Button disabled>Future button to show your store json data</Button>
+                        </FormGroup>
                       </Col>
                     </Row>
                   </div>

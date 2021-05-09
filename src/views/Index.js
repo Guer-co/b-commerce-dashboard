@@ -41,7 +41,7 @@ const Index = (props) => {
   const [importmodal, setImportmodal] = useState(false);
   const [choicemodal, setChoicemodal] = useState(false);
   const [createmodal, setCreatemodal] = useState(false);
-
+  const [myaddress, setMyaddress] = useState('');
   const [photoloading, setPhotoloading] = useState(false);
   const [open, setOpen] = useState(false);
   const [mynetwork, setMynetwork] = useState('');
@@ -86,6 +86,7 @@ const web3Modal = new Web3Modal({
       window.ethereum.autoRefreshOnNetworkChange = false;
       try {
           await window.ethereum.enable()
+          if (myaccount)
             await web3.eth.getAccounts((error, accounts) => {
               if (error) {
                 console.error(error);
@@ -132,6 +133,7 @@ const web3Modal = new Web3Modal({
             const guerABI = await new web3.eth.Contract(GUER_ABI, GUER_ADDRESS);
             console.log(guerABI);
             setGuer(guerABI);
+            console.log(guerABI);
             const accountArray = await guerABI.methods.getUserNFTs().call({from:myaccount});
             console.log(accountArray);
             if (accountArray.length > 0) {
@@ -175,18 +177,36 @@ const web3Modal = new Web3Modal({
 
   const uploadFile = async () => {
         const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' })
-        const file = document.getElementById("data_file").files[0];
+        const file = document.getElementById("product1image").files[0];
         const upload = await ipfs.add(file);
         console.log(upload.path);
         setLogo(upload.path);
     }
 
     const uploadStoredata = async () => {
-      const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' })
-      const file = document.getElementById("storedata").files[0];
-      const upload = await ipfs.add(file);
-      console.log(upload);
-  }
+
+      const data = {
+        "product1pic": product1image,
+        "product1title": product1title,
+        "product1description": product1description,
+        "product1price": product1price,
+        "product1sku": product1sku,
+
+    };  
+    const readydata = JSON.stringify(data);
+    console.log(readydata);
+
+          const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' })
+          const upload = await ipfs.add(readydata);
+          guer.methods.doUpdateMarketplaceJson(myaccount, upload.path).send({
+                  from: myaccount
+              })
+              .then(function(result){
+                  console.log(result);
+              }).catch(function(error){
+                  console.log(error);
+          });
+    }
 
   return (
     <>
@@ -341,23 +361,18 @@ const web3Modal = new Web3Modal({
                         accept="image/*"
                         id="product1image"
                         type="file"
-                        style={{display:'none'}}
                     onChange={(e) => {uploadFile(setProduct1image,e.target.id)}}
                     />
                     <label htmlFor="product1image">
-                    <Button className="small-main-buttons" component="span">
-                        <div>{product1image ? "Swap?" : "Product Image"}</div>
-                    </Button>
                     </label>
                     <img alt="" style={{maxWidth:'60px'}} src={product1image ? "https://gateway.ipfs.io/ipfs/" + product1image : ''}/>
                 </div>
-           <input id="storedata" type="file" onChange={(e) => uploadStoredata(setLogo,e.target.id)}/>     
         </ModalBody>
         <ModalFooter>
         <Button onClick={togglecreate} color="white">
             Cancel
         </Button>
-        <Button id="submit" onClick={() => registerAccount()} color="white" disabled={photoloading}>
+        <Button id="submit" onClick={() => uploadStoredata()} color="white" disabled={photoloading}>
             {photoloading ? "Uploading..." : "Create product!"}
         </Button>
         </ModalFooter>
@@ -385,8 +400,8 @@ const web3Modal = new Web3Modal({
         <Button onClick={toggleimport} color="white">
             Cancel
         </Button>
-        <Button id="submit" onClick={() => console.log('a')} color="white" disabled={photoloading}>
-            {photoloading ? "Uploading..." : "Upload list!"}
+        <Button id="submit" onClick={() => console.log('a')} color="white" disabled={true}>
+            {photoloading ? "Uploading..." : "Upload list! (disabled)"}
         </Button>
         </ModalFooter>
       </Modal>
